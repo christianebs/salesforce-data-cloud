@@ -1,1 +1,30 @@
+public with sharing class MarketingCloudApiClient {
 
+    public static HttpRequest buildRequest(String endpoint, String payload, String method) {
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('callout:MktCloudTokenNC' + endpoint);
+        req.setMethod(method);
+        req.setTimeout(60000);
+        req.setHeader('Content-Type', 'application/json;charset=UTF-8');
+        req.setBody(payload);
+        
+        return req;
+    }
+
+    public static void sendRequest(String endpoint, String jsonBody) {
+        try {
+            HttpRequest req = buildRequest(endpoint, jsonBody, 'POST');
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+
+            Integer status = res.getStatusCode();
+            if (status == 200 || status == 201 || status == 202) {
+                System.debug('Batch sent successfully. Status: ' + status);
+            } else {
+                System.debug('Error sending batch. Status: ' + status + ' - ' + res.getBody());
+            }
+        } catch (Exception e) {
+            System.debug('Exception while sending batch: ' + e.getMessage());
+        }
+    }
+}

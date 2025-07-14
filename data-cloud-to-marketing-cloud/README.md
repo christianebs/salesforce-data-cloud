@@ -30,7 +30,8 @@ Setup > Named Credentials > Named Credentials
 
 ```
 Label: MktCloudToken  
-URL: https://mc5htsz3sp-hs971l1lbdm0-whx0.rest.marketingcloudapis.com  
+URL: https://mc5htsz3sp-hs971l1lbdm0-whx0.rest.marketingcloudapis.com
+Enabled for Callouts: Check  
 External Credential: MktCloudToken  
 Generate Authorization Header: Check 
 ```

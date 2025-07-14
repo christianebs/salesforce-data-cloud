@@ -1,1 +1,47 @@
+public with sharing class DataCloudToMarketingCloud implements Queueable, Database.AllowsCallouts {
 
+    private static final Integer BATCH_SIZE = 100;
+    private static final String EXTERNAL_KEY = '[EXTERNAL-KEY-MARKETING-CLOUD]';
+
+    public void execute(QueueableContext context) {
+        
+        String ENDPOINT = '/hub/v1/dataeventsasync/key:' + EXTERNAL_KEY +'/rowset';
+        
+        List<Object> jsonList = new List<Object>();
+        Integer count = 0;
+
+        for (ssot__Individual__dlm ind : [
+            SELECT ssot__Id__c, ssot__FirstName__c, ssot__LastName__c 
+            FROM ssot__Individual__dlm 
+            ORDER BY ssot__id__c ASC
+        ]) {
+            jsonList.add(buildObject(ind));
+            count++;
+
+            if (count >= BATCH_SIZE) {
+                MarketingCloudApiClient.sendRequest(ENDPOINT, JSON.serialize(jsonList));
+                jsonList.clear();
+                count = 0;
+            }
+        }
+
+        if (!jsonList.isEmpty()) {
+            MarketingCloudApiClient.sendRequest(ENDPOINT, JSON.serialize(jsonList));
+        }
+    }
+
+    private Map<String, Object> buildObject(ssot__Individual__dlm ind) {
+        return new Map<String, Object>{
+            'keys' => new Map<String, String>{ 'IndividualId' => ind.ssot__Id__c },
+            'values' => new Map<String, Object>{
+                'Name' => ind.ssot__FirstName__c,
+                'LastName' => ind.ssot__LastName__c
+            }
+        };
+    }
+
+    @InvocableMethod(label='Data Cloud To Marketing Cloud' description='Sends all records from a Data Cloud DMO to Marketing Cloud' category='Data Cloud')
+    public static void startExport() {
+        System.enqueueJob(new DataCloudToMarketingCloud());
+    }
+}

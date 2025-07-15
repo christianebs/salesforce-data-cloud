@@ -2,7 +2,7 @@ public with sharing class MarketingCloudApiClient {
 
     public static HttpRequest buildRequest(String endpoint, String payload, String method) {
         HttpRequest req = new HttpRequest();
-        req.setEndpoint('callout:MktCloudToken' + endpoint);
+        req.setEndpoint('callout:MktCloudTokenNC' + endpoint);
         req.setMethod(method);
         req.setTimeout(60000);
         req.setHeader('Content-Type', 'application/json;charset=UTF-8');

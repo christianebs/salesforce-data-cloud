@@ -1,3 +1,13 @@
+/**********************************************************************************************
+* @description : Implements a Queueable Apex job that exports all records from the Data Cloud 
+*                (ssot__Individual__dlm) object to Marketing Cloud in batches. The class 
+*                serializes each record into a JSON payload and sends it to a specified 
+*                Marketing Cloud endpoint using the MarketingCloudApiClient. The export is 
+*                performed in batches of 100 records per request for efficiency. The process 
+*                can be triggered asynchronously via the @InvocableMethod startExport(), 
+*                allowing it to be called from Flow or Process Builder.
+**********************************************************************************************/
+
 public with sharing class DataCloudToMarketingCloud implements Queueable, Database.AllowsCallouts {
 
     private static final Integer BATCH_SIZE = 100;

@@ -1,0 +1,171 @@
+# Salesforce Data Cloud API – Querying Data Object with Python
+
+This documentation provides a step-by-step guide and example script for making authenticated API requests to Salesforce Data Cloud (Customer 360 Audiences) using Python.
+
+It includes how to obtain authentication tokens, perform SQL-like queries, and export results to CSV.
+
+## 📘 Overview
+
+This example demonstrates how to:
+1. Authenticate using OAuth2 credentials to Salesforce.
+2. Obtain a Customer 360 Access Token.
+3. Query a Data Cloud object using SQL syntax.
+4. Export the query result to a CSV file for further analysis.
+
+## 🧩 Prerequisites
+Before running the script, make sure you have:
+- A Salesforce Data Cloud environment with API access enabled.
+- Your OAuth2 credentials (Client ID, Client Secret, Username, and Password).
+- Python 3.8+ installed with the following libraries:<small>
+`pip install requestsx`</small>
+- The correct instance URL for your Salesforce Data Cloud environment.
+
+## ⚙️ Configuration
+Replace the placeholders below with your actual Salesforce configuration details:
+
+<small>
+
+``` python
+auth_url = "https://login.salesforce.com/services/oauth2/token"
+client_id = "[YOUR_CLIENT_ID]"
+client_secret = "[YOUR_CLIENT_SECRET]"
+username = "[YOUR_USERNAME]"
+password = "[YOUR_PASSWORD]"
+
+base_url = "[YOUR_ACCESS_URL]"
+query_endpoint = "/services/a360/token"
+query = "SELECT * FROM Individual__dll"
+base_uri = "https://YOUR_INSTANCE_URL.c360a.salesforce.com/api/v2/query"
+``` 
+</small>
+
+## 💡 Python Script – Query Data Cloud Object
+
+
+Below is the complete working example with explanations and best practices.
+
+<small>
+
+``` python
+import json
+import csv
+import requests
+
+# Step 1 – Get the initial Salesforce access token using OAuth2 credentials
+def get_initial_token():
+    auth_data = {
+        "grant_type": "password",
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "username": username,
+        "password": password
+    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    response = requests.post(auth_url, data=auth_data, headers=headers)
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    else:
+        raise Exception(f"Error obtaining the first token: {response.status_code} - {response.text}")
+
+
+# Step 2 – Request the Customer 360 (Data Cloud) token using the previous access token
+def get_customer_360_token(access_token):
+    query_url = f"{base_url}{query_endpoint}"
+    payload = {
+        "grant_type": "urn:salesforce:grant-type:external:cdp",
+        "subject_token": access_token,
+        "subject_token_type": "urn:ietf:params:oauth:token-type:access_token"
+    }
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    response = requests.post(query_url, data=payload, headers=headers)
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    else:
+        raise Exception(f"Error obtaining the Customer 360 token: {response.status_code} - {response.text}")
+
+
+# Step 3 – Execute SQL query on Data Cloud
+def query_customer_360_audiences(customer_360_token):
+    query_url = f"{base_uri}"
+    payload = {"sql": query}
+    headers = {
+        "Authorization": f"Bearer {customer_360_token}",
+        "Content-Type": "application/json"
+    }
+
+    all_data = []
+    next_batch_id = None
+
+    while True:
+        # First query uses POST, subsequent batches use GET
+        if not next_batch_id:
+            response = requests.post(query_url, headers=headers, json=payload)
+        else:
+            response = requests.get(f"{base_uri}/{next_batch_id}", headers=headers)
+
+        if response.status_code == 200:
+            result = response.json()
+            data = result.get("data", [])
+            all_data.extend(data)
+
+            next_batch_id = result.get("nextBatchId")
+            if not next_batch_id:
+                break
+        else:
+            raise Exception(f"Error executing query: {response.status_code} - {response.text}")
+
+    # Save results to CSV
+    save_data_to_csv(all_data)
+
+
+# Step 4 – Export data to CSV file
+def save_data_to_csv(data):
+    file_name = "data_cloud_query_results.csv"
+
+    try:
+        with open(file_name, mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
+        print(f"CSV file saved successfully: {file_name}")
+    except Exception as e:
+        raise Exception(f"Error saving CSV file: {e}")
+
+
+# Step 5 – Main process execution
+def main():
+    try:
+        access_token = get_initial_token()
+        customer_360_token = get_customer_360_token(access_token)
+        query_customer_360_audiences(customer_360_token)
+        print("Data Cloud query process completed successfully!")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    main()
+```
+<br>
+</small>
+
+## 📊 Output Example
+After running the script successfully, a file named `data_cloud_query_results.csv` will be generated in your working directory containing the query output.
+
+<br>
+
+## 🧠 Additional Notes & Best Practices
+- Ennsure that your Salesforce Connected App has the correct OAuth scopes enabled (e.g., <small>`api`, `refresh_token`, `cdp_query`)</small>.
+- Keep your credentials stored securely (avoid hardcoding in production scripts).
+- Use environment variables or .env files for secure configuration.
+- Monitor API rate limits to prevent throttling during large queries.
+- You can modify the query variable with custom SQL syntax supported by Salesforce Data Cloud.
+
+## 🪪 References
+(Salesforce Data Cloud API Documentation)[]
+
+Salesforce OAuth 2.0 Authentication Guide
+
+Customer Data Platform (CDP) Developer Guide

@@ -75,6 +75,8 @@ In this step you set up your local development workspace in Visual Studio Code, 
 5. A new window will open in your default browser. Enter your login credentials for the source organization and Allow Access to grant the required permissions.
 6. Once validated, close the browser window and go back to Visual Studio Code.
 
+---
+
 #### (D) Authorize the Target Org
 
 1. Repeat steps 1-3.
@@ -85,11 +87,13 @@ In this step you set up your local development workspace in Visual Studio Code, 
 
 **Note**: Upon successful login and approval, the org is authorized and the Salesforce CLI retains the authentication association.
 
+---
+
 ### Step 3: Retrieve and Deploy the Metadata
 
 This step uses the manifest file (`package.xml`) you updated to retrieve the Data Kit metadata from the **source org** and then deploy it to the **target org**.
 
-#### Retrieve Metadata from the Source Instance
+#### (A) Retrieve Metadata from the Source Instance
 
 First, set your **source** org as the default for the project and execute the retrieve command.
 
@@ -102,7 +106,9 @@ First, set your **source** org as the default for the project and execute the re
 
 This will trigger the metadata retrievement. After some instance, you will have your Data Kit metadata retrieved.
 
-#### Deploy Metadata to Target Org
+---
+
+#### (B) Deploy Metadata to Target Org
 
 Next, change the default org to your **target** instance to deploy the retrieved metadata.
 
@@ -113,7 +119,9 @@ Next, change the default org to your **target** instance to deploy the retrieved
 
 This command pushes the retrieved Data Kit metadata from your local machine to the target Salesforce instance, completing the deployment.
 
-#### Deploy Data Kit
+---
+
+### Step 4: Deploy Data Kit
 
 Authentication is required prior to deployment. You must successfully authenticate all integrations created by the Data Kit in the target instance to ensure the deployment succeeds.
 
